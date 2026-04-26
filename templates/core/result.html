@@ -3,113 +3,162 @@
 {% block content %}
 
 {% with status=result.overall_status %}
+
+<!-- VERDICT BANNER -->
 <div class="verdict-banner verdict-{{ status }}">
-    <div class="verdict-icon">{% if status == 'halal' %}✅{% elif status == 'haram' %}❌{% else %}⚠️{% endif %}</div>
-    <div>
+    <div style="position:absolute;top:-15px;right:20px;transform:rotate(3deg);">
+        <span style="font-size:0.7rem;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;padding:0.3rem 0.75rem;border:3px solid var(--black);background:var(--black);color:var(--yellow);">
+            {{ result.madhab|upper }} MADHAB
+        </span>
+    </div>
+    <div class="verdict-icon">
+        {% if status == 'halal' %}✅{% elif status == 'haram' %}❌{% else %}⚠️{% endif %}
+    </div>
+    <div style="flex:1;">
         <div class="verdict-label">{{ status|upper }}</div>
         <div class="verdict-sub">
-            {% if result.product_name %}{{ result.product_name }} &middot; {% endif %}
-            {{ result.madhab|capfirst }} madhab
-            {% if result.ai_used %}&middot; AI-assisted{% endif %}
+            {% if result.product_name %}{{ result.product_name }}{% else %}Manual Check{% endif %}
+            {% if result.ai_used %} &nbsp;·&nbsp; <span style="font-size:0.75rem;opacity:0.8;">AI-assisted</span>{% endif %}
         </div>
     </div>
-    <a href="/" class="btn" style="margin-left:auto;">Check another</a>
+    <a href="/" class="btn btn-black" style="flex-shrink:0;">← New Check</a>
 </div>
+
 {% endwith %}
-    
-    {% if has_halal_logo %}
-<div style="background:#f0fdf4;border:1px solid var(--green);border-radius:8px;padding:0.875rem 1rem;margin-bottom:1rem;font-size:0.875rem;color:var(--green);display:flex;align-items:center;gap:0.5rem;">
-    <span style="font-size:1.2rem;">☑️</span>
-    <span><strong>Halal Certified</strong>{% if halal_logo_name %} — {{ halal_logo_name }}{% endif %}. A halal certification logo was detected on this product.</span>
-</div>
-{% endif %}
 
-{% if product %}
-<div class="card" style="display:flex;gap:1rem;align-items:center;">
-    {% if product.image_url %}
-    <img src="{{ product.image_url }}" style="width:80px;height:80px;object-fit:contain;border-radius:6px;border:1px solid var(--border);">
-    {% endif %}
+<!-- HALAL LOGO DETECTED -->
+{% if has_halal_logo %}
+<div style="background:var(--green);border:4px solid var(--black);padding:0.875rem 1.25rem;margin-bottom:1.5rem;box-shadow:6px 6px 0px 0px var(--black);display:flex;align-items:center;gap:0.75rem;">
+    <span style="font-size:1.5rem;">☑️</span>
     <div>
-        <div style="font-weight:600;">{{ product.product_name }}</div>
-        {% if product.brands %}<div style="color:var(--gray);font-size:0.875rem;">{{ product.brands }}</div>{% endif %}
-        <div style="color:var(--gray);font-size:0.8rem;">Barcode: {{ result.barcode }}</div>
+        <p style="font-size:0.75rem;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;">Halal Certified</p>
+        <p style="font-size:0.8rem;font-weight:700;">Halal certification logo detected{% if halal_logo_name %}: <strong>{{ halal_logo_name }}</strong>{% endif %}. Trust the certification on this product.</p>
     </div>
 </div>
 {% endif %}
 
-<div class="card">
-    <h2>Ingredient Breakdown</h2>
-    {% for ing in result.ingredient_results %}
-    <div class="ingredient-row ing-{{ ing.status }}">
-        <div class="ing-header">
-            <span class="ing-name">
-                {% if ing.status == 'halal' %}✅{% elif ing.status == 'haram' %}❌{% else %}⚠️{% endif %}
-                {{ ing.original }}
-                {% if ing.matched_name and ing.matched_name != ing.original %}
-                <span style="color:var(--gray);font-size:0.8rem;">({{ ing.matched_name }})</span>
-                {% endif %}
-                {% if ing.ai_classified %}
-                <span style="font-size:0.7rem;background:#ede9fe;color:#7c3aed;padding:0.1rem 0.4rem;border-radius:10px;">AI</span>
-                {% endif %}
-            </span>
-            <span class="badge badge-{{ ing.status }}">{{ ing.status|capfirst }}</span>
+<!-- PRODUCT INFO (barcode) -->
+{% if product %}
+<div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-body" style="display:flex;gap:1rem;align-items:center;">
+        {% if product.image_url %}
+        <img src="{{ product.image_url }}" style="width:80px;height:80px;object-fit:contain;border:4px solid var(--black);">
+        {% endif %}
+        <div>
+            <p style="font-weight:900;font-size:1.1rem;">{{ product.product_name }}</p>
+            {% if product.brands %}<p style="font-weight:700;font-size:0.85rem;color:#555;text-transform:uppercase;letter-spacing:0.05em;">{{ product.brands }}</p>{% endif %}
+            <p style="font-size:0.75rem;font-weight:700;color:#777;margin-top:0.25rem;">Barcode: {{ result.barcode }}</p>
         </div>
-        {% if ing.source %}
-        <div class="ing-source">
-            {{ ing.source }}
-            {% if ing.source_url %}
-            <a href="{{ ing.source_url }}" target="_blank" style="color:var(--green);">Source</a>
+    </div>
+</div>
+{% endif %}
+
+<!-- OCR TEXT -->
+{% if ocr_text %}
+<div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-header"><span>📷</span><h2>Extracted Text (OCR)</h2></div>
+    <div class="card-body">
+        <pre style="font-size:0.8rem;font-weight:700;white-space:pre-wrap;overflow-x:auto;font-family:'Space Grotesk',sans-serif;">{{ ocr_text }}</pre>
+    </div>
+</div>
+{% endif %}
+
+<!-- INGREDIENT BREAKDOWN -->
+<div class="card">
+    <div class="card-header"><span>🔬</span><h2>Ingredient Breakdown</h2>
+        <span style="margin-left:auto;font-size:0.7rem;color:rgba(255,255,255,0.6);font-weight:700;">{{ result.ingredient_results|length }} ingredients</span>
+    </div>
+    <div class="card-body" style="padding:1rem;">
+        {% for ing in result.ingredient_results %}
+        <div class="ing-row ing-{{ ing.status }}">
+            <div class="ing-header">
+                <span class="ing-name">
+                    {% if ing.status == 'halal' %}✅{% elif ing.status == 'haram' %}❌{% else %}⚠️{% endif %}
+                    {{ ing.original }}
+                    {% if ing.matched_name and ing.matched_name != ing.original %}
+                    <span style="font-size:0.78rem;font-weight:700;opacity:0.6;">({{ ing.matched_name }})</span>
+                    {% endif %}
+                    {% if ing.ai_classified %}
+                    <span style="font-size:0.65rem;font-weight:900;background:var(--violet);border:2px solid var(--black);padding:0.1rem 0.4rem;text-transform:uppercase;letter-spacing:0.05em;margin-left:0.25rem;">AI</span>
+                    {% endif %}
+                </span>
+                <span class="badge badge-{{ ing.status }}">{{ ing.status|upper }}</span>
+            </div>
+            {% if ing.source %}
+            <div class="ing-source">
+                {{ ing.source }}
+                {% if ing.source_url %}
+                <a href="{{ ing.source_url }}" target="_blank" style="font-weight:900;border-bottom:2px solid currentColor;color:inherit;text-decoration:none;margin-left:0.4rem;">↗ Source</a>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% if ing.notes %}
+            <div class="ing-notes">📌 {{ ing.notes }}</div>
             {% endif %}
         </div>
-        {% endif %}
-        {% if ing.notes %}
-        <div class="ing-notes">Note: {{ ing.notes }}</div>
-        {% endif %}
-    </div>
-    {% empty %}
-    <p style="color:var(--gray);">No ingredients could be parsed.</p>
-    {% endfor %}
-</div>
-
-{% if result.unknown_ingredients %}
-<div class="card">
-    <h2>Unrecognized Ingredients</h2>
-    <p style="color:var(--gray);font-size:0.875rem;margin-bottom:0.75rem;">Not in our database. Check with manufacturer.</p>
-    <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
-        {% for unk in result.unknown_ingredients %}
-        <span style="background:var(--yellow-light);color:var(--yellow);padding:0.25rem 0.625rem;border-radius:4px;font-size:0.85rem;">{{ unk }}</span>
+        {% empty %}
+        <p style="font-weight:700;color:#666;text-transform:uppercase;font-size:0.85rem;">No ingredients could be parsed.</p>
         {% endfor %}
     </div>
 </div>
+
+<!-- UNKNOWNS -->
+{% if result.unknown_ingredients %}
+<div class="card">
+    <div class="card-header"><span>❓</span><h2>Unrecognized Ingredients</h2></div>
+    <div class="card-body">
+        <p style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem;color:#555;">Not found in database — check with manufacturer.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+            {% for unk in result.unknown_ingredients %}
+            <span style="background:var(--yellow);border:3px solid var(--black);padding:0.25rem 0.625rem;font-size:0.8rem;font-weight:900;text-transform:uppercase;box-shadow:3px 3px 0 var(--black);">{{ unk }}</span>
+            {% endfor %}
+        </div>
+    </div>
+</div>
 {% endif %}
 
-<details style="margin-bottom:1.5rem;">
-    <summary style="cursor:pointer;color:var(--gray);font-size:0.875rem;padding:0.5rem 0;">Show raw text</summary>
-    <pre style="font-size:0.8rem;color:var(--gray);white-space:pre-wrap;margin-top:0.5rem;padding:0.75rem;background:#f3f4f6;border-radius:6px;">{{ result.raw_text }}</pre>
+<!-- RAW TEXT -->
+<details style="margin-bottom:2rem;">
+    <summary style="cursor:pointer;font-size:0.75rem;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;padding:0.5rem 0;border-bottom:3px solid var(--black);">Show Raw Ingredient Text</summary>
+    <pre style="font-size:0.8rem;font-weight:700;white-space:pre-wrap;margin-top:0.75rem;padding:1rem;background:var(--cream);border:4px solid var(--black);font-family:'Space Grotesk',sans-serif;">{{ result.raw_text }}</pre>
 </details>
 
 <style>
-.verdict-banner{display:flex;align-items:center;gap:1rem;padding:1.25rem 1.5rem;border-radius:10px;margin-bottom:1.5rem;border:2px solid;}
-.verdict-halal{background:var(--green-light);border-color:var(--green);}
-.verdict-haram{background:var(--red-light);border-color:var(--red);}
-.verdict-questionable{background:var(--yellow-light);border-color:var(--yellow);}
-.verdict-icon{font-size:2rem;}
-.verdict-label{font-size:1.5rem;font-weight:800;letter-spacing:0.05em;}
-.verdict-halal .verdict-label{color:var(--green);}
-.verdict-haram .verdict-label{color:var(--red);}
-.verdict-questionable .verdict-label{color:var(--yellow);}
-.verdict-sub{font-size:0.875rem;color:var(--gray);margin-top:0.125rem;}
-.ingredient-row{border-left:3px solid;padding:0.75rem 1rem;margin-bottom:0.75rem;border-radius:0 6px 6px 0;}
-.ing-halal{border-color:var(--green);background:#f0fdf4;}
-.ing-haram,.ing-hanafi_haram,.ing-shafii_haram{border-color:var(--red);background:#fef2f2;}
-.ing-questionable{border-color:var(--yellow);background:#fffbeb;}
-.ing-header{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;}
-.ing-name{font-weight:500;font-size:0.95rem;}
-.ing-source{font-size:0.82rem;color:var(--gray);margin-top:0.4rem;}
-.ing-notes{font-size:0.82rem;color:#92400e;margin-top:0.3rem;}
-.badge{display:inline-block;padding:0.2rem 0.6rem;border-radius:20px;font-size:0.75rem;font-weight:600;white-space:nowrap;flex-shrink:0;}
-.badge-halal{background:var(--green-light);color:var(--green);}
-.badge-haram,.badge-hanafi_haram,.badge-shafii_haram{background:var(--red-light);color:var(--red);}
-.badge-questionable{background:var(--yellow-light);color:var(--yellow);}
+.verdict-banner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    border: 4px solid var(--black);
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: visible;
+}
+.verdict-halal { background: var(--green); box-shadow: 8px 8px 0px 0px var(--black); }
+.verdict-haram { background: var(--red); box-shadow: 8px 8px 0px 0px var(--black); }
+.verdict-questionable { background: var(--yellow); box-shadow: 8px 8px 0px 0px var(--black); }
+.verdict-icon { font-size: 2.5rem; flex-shrink: 0; }
+.verdict-label { font-size: 2.5rem; font-weight: 900; text-transform: uppercase; letter-spacing: -0.02em; line-height: 1; }
+.verdict-halal .verdict-label, .verdict-halal .verdict-sub { color: var(--black); }
+.verdict-haram .verdict-label { color: var(--white); }
+.verdict-haram .verdict-sub { color: rgba(255,255,255,0.8); }
+.verdict-questionable .verdict-label, .verdict-questionable .verdict-sub { color: var(--black); }
+.verdict-sub { font-size: 0.85rem; font-weight: 700; margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.ing-row {
+    border: 3px solid var(--black);
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.625rem;
+    border-left: 8px solid var(--black);
+    transition: transform 0.1s ease;
+}
+.ing-row:hover { transform: translateX(3px); }
+.ing-halal { border-left-color: #10b981; background: #f0fdf4; }
+.ing-haram, .ing-hanafi_haram, .ing-shafii_haram { border-left-color: var(--red); background: #fff0f0; }
+.ing-questionable { border-left-color: #f59e0b; background: #fffbeb; }
+.ing-header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
+.ing-name { font-weight: 700; font-size: 0.95rem; }
+.ing-source { font-size: 0.8rem; font-weight: 700; color: #444; margin-top: 0.4rem; }
+.ing-notes { font-size: 0.78rem; font-weight: 700; color: #92400e; margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.03em; }
 </style>
 {% endblock %}

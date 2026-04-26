@@ -1,122 +1,150 @@
 {% extends "base.html" %}
-{% block title %}Halal Ingredient Checker{% endblock %}
+{% block title %}TAYYIB — Check Halal Status{% endblock %}
 
 {% block content %}
+
+<!-- HERO -->
+<div style="margin-bottom:2rem;padding:2rem 1.5rem;background:var(--black);border:4px solid var(--black);box-shadow:8px 8px 0px 0px var(--red);position:relative;overflow:hidden;">
+    <div style="position:absolute;top:-20px;right:-20px;width:120px;height:120px;background:var(--yellow);border:4px solid var(--white);transform:rotate(15deg);opacity:0.15;"></div>
+    <div style="position:absolute;bottom:-30px;left:60%;width:80px;height:80px;background:var(--violet);border:4px solid var(--white);transform:rotate(-10deg);opacity:0.2;"></div>
+    <p style="font-size:0.7rem;font-weight:900;text-transform:uppercase;letter-spacing:0.2em;color:var(--yellow);margin-bottom:0.5rem;">Islamic Dietary Checker</p>
+    <h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:900;color:var(--white);text-transform:uppercase;line-height:1;letter-spacing:-0.02em;">
+        Is it <span style="color:var(--yellow);">Halal</span>?<br>Find out now.
+    </h1>
+    <p style="color:rgba(255,255,255,0.6);font-size:0.875rem;font-weight:700;margin-top:0.75rem;max-width:420px;">
+        Paste ingredients, scan a barcode, or upload a label photo. We check against our database + AI for unknowns.
+    </p>
+</div>
+
+<!-- CHECKER CARD -->
 <div class="card">
-    <h2>🔍 Check Ingredients</h2>
+    <div class="card-header">
+        <span>🔍</span>
+        <h2>Check Ingredients</h2>
+    </div>
+    <div class="card-body">
 
-    <div style="margin-bottom:1.25rem;">
-        <label style="margin-bottom:0.5rem;">Madhab</label>
-        <div class="madhab-row" id="madhab-row">
-            <label class="madhab-btn">
-                <input type="radio" name="madhab_global" value="hanafi" checked> Hanafi
-            </label>
-            <label class="madhab-btn">
-                <input type="radio" name="madhab_global" value="shafii"> Shafi'i
-            </label>
+        <!-- MADHAB -->
+        <div class="field">
+            <label>Select Your Madhab</label>
+            <div class="madhab-row">
+                <label class="madhab-btn">
+                    <input type="radio" name="madhab_global" value="hanafi" checked>
+                    🕌 Hanafi
+                </label>
+                <label class="madhab-btn">
+                    <input type="radio" name="madhab_global" value="shafii">
+                    🕌 Shafi'i
+                </label>
+            </div>
         </div>
-    </div>
 
-    <div class="tabs">
-        <button class="tab active" onclick="switchTab('text', this)">📝 Text</button>
-        <button class="tab" onclick="switchTab('barcode', this)">📦 Barcode</button>
-        <button class="tab" onclick="switchTab('image', this)">📷 Image</button>
-    </div>
-
-    <!-- Tab: Text -->
-    <div id="tab-text" class="tab-panel active">
-        <form method="post" action="{% url 'analyze_text' %}">
-            {% csrf_token %}
-            <input type="hidden" name="madhab" id="madhab-text">
-            <div style="margin-bottom:1rem;">
-                <label for="ingredients">Ingredient List</label>
-                <textarea name="ingredients" id="ingredients"
-                    placeholder="Paste ingredient list here e.g: Water, Sugar, E471, Gelatin, Natural Flavouring..."></textarea>
-            </div>
-            <div style="margin-bottom:1rem;">
-                <label for="product_name">Product Name (optional)</label>
-                <input type="text" name="product_name" id="product_name" placeholder="e.g. Oreo Cookies">
-            </div>
-            <button type="submit">Analyze →</button>
-        </form>
-    </div>
-
-    <!-- Tab: Barcode -->
-    <div id="tab-barcode" class="tab-panel">
-        <form method="post" action="{% url 'analyze_barcode' %}">
-            {% csrf_token %}
-            <input type="hidden" name="madhab" id="madhab-barcode">
-            <div style="margin-bottom:1rem;">
-                <label for="barcode">Barcode Number</label>
-                <input type="text" name="barcode" id="barcode"
-                    placeholder="e.g. 737628064502" pattern="[0-9]+" inputmode="numeric">
-            </div>
-            <button type="submit">Fetch & Analyze →</button>
-        </form>
-        <p style="font-size:0.8rem;color:#9ca3af;margin-top:0.75rem;">
-            Uses <a href="https://world.openfoodfacts.org" target="_blank">Open Food Facts</a> — free, 3M+ products.
-        </p>
-    </div>
-
-    <!-- Tab: Image -->
-    <div id="tab-image" class="tab-panel">
-    <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:0.875rem 1rem;margin-bottom:1rem;font-size:0.875rem;color:#92400e;">
-        <strong>⚠️ Before uploading:</strong> If the product already has a <strong>Halal certification logo</strong> printed on the packaging (e.g. MUI, JAKIM, IFANCA, HMC), you can trust that certification directly — no need to scan here.
-        Use this tool for products <strong>without</strong> a halal logo, or when you're unsure.
-    </div>
-    <form method="post" action="{% url 'analyze_image' %}" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input type="hidden" name="madhab" id="madhab-image">
-        <div style="margin-bottom:1rem;">
-            <label for="image">Upload Label Photo</label>
-            <input type="file" name="image" id="image" accept="image/*">
+        <!-- TABS -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('text', this)">📝 Text</button>
+            <button class="tab" onclick="switchTab('barcode', this)">📦 Barcode</button>
+            <button class="tab" onclick="switchTab('image', this)">📷 Image</button>
         </div>
-        <p style="font-size:0.8rem;color:#9ca3af;margin-bottom:1rem;">
-            Take a clear, well-lit photo of the <strong>ingredient list</strong>. JPG/PNG up to 10MB.
-        </p>
-        <button type="submit">Analyze Image →</button>
-    </form>
+
+        <!-- Tab: Text -->
+        <div id="tab-text" class="tab-panel active">
+            <form method="post" action="{% url 'analyze_text' %}">
+                {% csrf_token %}
+                <input type="hidden" name="madhab" id="madhab-text">
+                <div class="field">
+                    <label for="ingredients">Ingredient List</label>
+                    <textarea name="ingredients" id="ingredients"
+                        placeholder="e.g. Water, Sugar, E471, Gelatin, Natural Flavouring..."></textarea>
+                </div>
+                <div class="field">
+                    <label for="product_name">Product Name (Optional)</label>
+                    <input type="text" name="product_name" id="product_name" placeholder="e.g. Oreo Cookies">
+                </div>
+                <button type="submit">Analyze →</button>
+            </form>
+        </div>
+
+        <!-- Tab: Barcode -->
+        <div id="tab-barcode" class="tab-panel">
+            <form method="post" action="{% url 'analyze_barcode' %}">
+                {% csrf_token %}
+                <input type="hidden" name="madhab" id="madhab-barcode">
+                <div class="field">
+                    <label for="barcode">Barcode Number</label>
+                    <input type="text" name="barcode" id="barcode"
+                        placeholder="e.g. 737628064502" inputmode="numeric">
+                </div>
+                <button type="submit">Fetch & Analyze →</button>
+                <p style="font-size:0.75rem;font-weight:700;color:#666;margin-top:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">
+                    Powered by Open Food Facts — 3M+ products
+                </p>
+            </form>
+        </div>
+
+        <!-- Tab: Image -->
+        <div id="tab-image" class="tab-panel">
+            <div style="background:var(--yellow);border:4px solid var(--black);padding:0.875rem 1rem;margin-bottom:1.25rem;box-shadow:4px 4px 0px 0px var(--black);">
+                <p style="font-size:0.8rem;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;color:var(--black);">
+                    ⚠ Before You Upload
+                </p>
+                <p style="font-size:0.8rem;font-weight:700;color:var(--black);margin-top:0.25rem;">
+                    If the product already has a <strong>Halal certification logo</strong> (MUI, JAKIM, IFANCA, HMC etc.) printed on the packaging — trust that certification directly. Use this tool only for products <strong>without</strong> a halal logo.
+                </p>
+            </div>
+            <form method="post" action="{% url 'analyze_image' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="madhab" id="madhab-image">
+                <div class="field">
+                    <label for="image">Upload Label Photo</label>
+                    <input type="file" name="image" id="image" accept="image/*">
+                </div>
+                <p style="font-size:0.75rem;font-weight:700;color:#666;margin-bottom:1rem;text-transform:uppercase;letter-spacing:0.05em;">
+                    Clear photo of ingredient list only — JPG/PNG up to 10MB
+                </p>
+                <button type="submit">Analyze Image →</button>
+            </form>
+        </div>
+
     </div>
 </div>
 
+<!-- RECENT CHECKS -->
 {% if recent %}
 <div class="card">
-    <h2>🕐 Recent Checks</h2>
-    <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
-        <thead>
-            <tr style="border-bottom:1px solid var(--border);">
-                <th style="text-align:left;padding:0.5rem;">Product</th>
-                <th style="text-align:left;padding:0.5rem;">Status</th>
-                <th style="text-align:left;padding:0.5rem;">Madhab</th>
-                <th style="text-align:left;padding:0.5rem;">Date</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for r in recent %}
-            <tr style="border-bottom:1px solid var(--border);">
-                <td style="padding:0.5rem;">
-                    <a href="{% url 'result_detail' r.pk %}" style="color:var(--green);text-decoration:none;">
-                        {{ r.product_name|default:"Manual Check" }}
-                    </a>
-                </td>
-                <td style="padding:0.5rem;">
-                    <span class="badge badge-{{ r.overall_status }}">{{ r.overall_status|capfirst }}</span>
-                </td>
-                <td style="padding:0.5rem;">{{ r.madhab|capfirst }}</td>
-                <td style="padding:0.5rem;color:var(--gray);">{{ r.created_at|date:"M d, H:i" }}</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    <div class="card-header">
+        <span>🕐</span>
+        <h2>Recent Checks</h2>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.875rem;">
+            <thead>
+                <tr style="border-bottom:4px solid var(--black);background:var(--cream);">
+                    <th style="text-align:left;padding:0.75rem 1.25rem;font-size:0.7rem;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;">Product</th>
+                    <th style="text-align:left;padding:0.75rem 1.25rem;font-size:0.7rem;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;">Status</th>
+                    <th style="text-align:left;padding:0.75rem 1.25rem;font-size:0.7rem;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;">Madhab</th>
+                    <th style="text-align:left;padding:0.75rem 1.25rem;font-size:0.7rem;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;">Date</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for r in recent %}
+                <tr style="border-bottom:2px solid var(--black);" onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background='var(--white)'">
+                    <td style="padding:0.75rem 1.25rem;font-weight:700;">
+                        <a href="{% url 'result_detail' r.pk %}" style="color:var(--black);text-decoration:none;border-bottom:3px solid var(--black);">
+                            {{ r.product_name|default:"Manual Check" }}
+                        </a>
+                    </td>
+                    <td style="padding:0.75rem 1.25rem;">
+                        <span class="badge badge-{{ r.overall_status }}">{{ r.overall_status|upper }}</span>
+                    </td>
+                    <td style="padding:0.75rem 1.25rem;font-weight:700;text-transform:uppercase;font-size:0.8rem;">{{ r.madhab }}</td>
+                    <td style="padding:0.75rem 1.25rem;font-weight:700;font-size:0.8rem;color:#555;">{{ r.created_at|date:"M d, H:i" }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endif %}
-
-<style>
-.badge { display:inline-block;padding:0.2rem 0.6rem;border-radius:20px;font-size:0.8rem;font-weight:600; }
-.badge-halal { background:var(--green-light);color:var(--green); }
-.badge-haram { background:var(--red-light);color:var(--red); }
-.badge-questionable { background:var(--yellow-light);color:var(--yellow); }
-</style>
 
 <script>
     function syncMadhab() {
