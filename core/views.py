@@ -3,13 +3,11 @@ from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 
 from .models import AnalysisResult, Madhab
-from .classifier import classify
+from .classifier import classify, IngredientResult, ClassificationReport, STATUS_PRIORITY, IngredientStatus
 from .barcode import fetch_by_barcode
-from .ocr import extract_text_from_image
 
 
 def index(request):
-    """Main page — text input + barcode + image upload form."""
     recent = AnalysisResult.objects.order_by('-created_at')[:5]
     return render(request, 'core/index.html', {
         'madhab_choices': Madhab.choices,
@@ -19,7 +17,6 @@ def index(request):
 
 @require_http_methods(["POST"])
 def analyze_text(request):
-    """Handle raw ingredient text submission."""
     raw_text = request.POST.get('ingredients', '').strip()
     madhab = request.POST.get('madhab', Madhab.HANAFI)
 
@@ -39,7 +36,6 @@ def analyze_text(request):
 
 @require_http_methods(["POST"])
 def analyze_barcode(request):
-    """Fetch product from Open Food Facts, then classify."""
     barcode = request.POST.get('barcode', '').strip()
     madhab = request.POST.get('madhab', Madhab.HANAFI)
 
@@ -72,44 +68,59 @@ def analyze_barcode(request):
         'product': product,
     })
 
+
 @require_http_methods(["POST"])
 def analyze_image(request):
-    messages.error(request, "Image upload is not available yet.")
-    return render(request, 'core/index.html', {'madhab_choices': Madhab.choices})
+    madhab = request.POST.get('madhab', Madhab.HANAFI)
+    image = request.FILES.get('image')
 
-# @require_http_methods(["POST"])
-# def analyze_image(request):
-#     """Extract text from uploaded image via OCR, then classify."""
-#     madhab = request.POST.get('madhab', Madhab.HANAFI)
-#     image = request.FILES.get('image')
-#
-#     if not image:
-#         messages.error(request, "Please upload an image.")
-#         return render(request, 'core/index.html', {'madhab_choices': Madhab.choices})
-#
-#     try:
-#         raw_text = extract_text_from_image(image)
-#     except ValueError as e:
-#         messages.error(request, str(e))
-#         return render(request, 'core/index.html', {'madhab_choices': Madhab.choices})
-#
-#     if not raw_text:
-#         messages.error(request, "Could not extract any text from the image. Try a clearer photo.")
-#         return render(request, 'core/index.html', {'madhab_choices': Madhab.choices})
-#
-#     report = classify(raw_text, madhab)
-#     result = _save_result(raw_text, madhab, report)
-#
-#     return render(request, 'core/result.html', {
-#         'result': result,
-#         'report': report,
-#         'madhab': madhab,
-#         'ocr_text': raw_text,
-#     })
+    if not image:
+        messages.error(request, "Please upload an image.")
+        return render(request, 'core/index.html', {'madhab_choices': Madhab.choices})
+
+    try:
+        from .ocr import extract_and_classify_from_image
+        data = extract_and_classify_from_image(image, madhab)
+    except ValueError as e:
+        messages.error(request, str(e))
+        return render(request, 'core/index.html', {'madhab_choices': Madhab.choices})
+
+    ingredients_text = data.get('ingredients_text', '')
+    if not ingredients_text:
+        messages.error(request, "Could not find an ingredient list in the image. Try a clearer photo.")
+        return render(request, 'core/index.html', {'madhab_choices': Madhab.choices})
+
+    results = []
+    for item in data.get('results', []):
+        results.append(IngredientResult(
+            original=item['ingredient'],
+            matched_name=item['ingredient'],
+            status=item['status'],
+            source=item['reason'],
+            source_url='',
+            notes='Classified by AI vision — verify independently.',
+            ai_classified=True,
+        ))
+
+    overall = max(results, key=lambda r: STATUS_PRIORITY.get(r.status, 0)).status if results else IngredientStatus.QUESTIONABLE
+
+    report = ClassificationReport(
+        overall_status=overall,
+        ingredient_results=results,
+        ai_used=True,
+    )
+
+    result = _save_result(ingredients_text, madhab, report)
+
+    return render(request, 'core/result.html', {
+        'result': result,
+        'report': report,
+        'madhab': madhab,
+        'ocr_text': ingredients_text,
+    })
 
 
 def result_detail(request, pk):
-    """View a previously saved analysis."""
     result = get_object_or_404(AnalysisResult, pk=pk)
     return render(request, 'core/result.html', {
         'result': result,
@@ -118,10 +129,7 @@ def result_detail(request, pk):
     })
 
 
-# ── helpers ──────────────────────────────────────────────────────────────────
-
 def _save_result(raw_text, madhab, report, product_name='', barcode=''):
-    """Persist analysis to DB and return the saved instance."""
     return AnalysisResult.objects.create(
         raw_text=raw_text,
         barcode=barcode,
