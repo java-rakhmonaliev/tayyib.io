@@ -140,6 +140,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
+
+    'drf_spectacular',
+    'rest_framework',
     'core',
 ]
 
@@ -204,3 +207,13 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Tayyib.io API',
+    'DESCRIPTION': 'Halal ingredient checker API',
+    'VERSION': '1.0.0',
+}
