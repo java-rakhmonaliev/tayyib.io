@@ -16,6 +16,13 @@
     <a href="/" class="btn" style="margin-left:auto;">Check another</a>
 </div>
 {% endwith %}
+    
+    {% if has_halal_logo %}
+<div style="background:#f0fdf4;border:1px solid var(--green);border-radius:8px;padding:0.875rem 1rem;margin-bottom:1rem;font-size:0.875rem;color:var(--green);display:flex;align-items:center;gap:0.5rem;">
+    <span style="font-size:1.2rem;">☑️</span>
+    <span><strong>Halal Certified</strong>{% if halal_logo_name %} — {{ halal_logo_name }}{% endif %}. A halal certification logo was detected on this product.</span>
+</div>
+{% endif %}
 
 {% if product %}
 <div class="card" style="display:flex;gap:1rem;align-items:center;">

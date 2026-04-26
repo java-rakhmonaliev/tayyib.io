@@ -86,23 +86,39 @@ def analyze_image(request):
         return render(request, 'core/index.html', {'madhab_choices': Madhab.choices})
 
     ingredients_text = data.get('ingredients_text', '')
+    has_halal_logo = data.get('has_halal_logo', False)
+    halal_logo_name = data.get('halal_logo_name', None)
+
     if not ingredients_text:
         messages.error(request, "Could not find an ingredient list in the image. Try a clearer photo.")
         return render(request, 'core/index.html', {'madhab_choices': Madhab.choices})
 
-    results = []
-    for item in data.get('results', []):
-        results.append(IngredientResult(
-            original=item['ingredient'],
-            matched_name=item['ingredient'],
-            status=item['status'],
-            source=item['reason'],
-            source_url='',
-            notes='Classified by AI vision — verify independently.',
-            ai_classified=True,
-        ))
-
-    overall = max(results, key=lambda r: STATUS_PRIORITY.get(r.status, 0)).status if results else IngredientStatus.QUESTIONABLE
+    if has_halal_logo:
+        results = []
+        for item in data.get('results', []):
+            results.append(IngredientResult(
+                original=item['ingredient'],
+                matched_name=item['ingredient'],
+                status='halal',
+                source=f'Product is certified halal ({halal_logo_name or "logo detected"}).',
+                source_url='',
+                notes='Classified by AI vision — verify independently.',
+                ai_classified=True,
+            ))
+        overall = IngredientStatus.HALAL
+    else:
+        results = []
+        for item in data.get('results', []):
+            results.append(IngredientResult(
+                original=item['ingredient'],
+                matched_name=item['ingredient'],
+                status=item['status'],
+                source=item['reason'],
+                source_url='',
+                notes='Classified by AI vision — verify independently.',
+                ai_classified=True,
+            ))
+        overall = max(results, key=lambda r: STATUS_PRIORITY.get(r.status, 0)).status if results else IngredientStatus.QUESTIONABLE
 
     report = ClassificationReport(
         overall_status=overall,
@@ -117,6 +133,8 @@ def analyze_image(request):
         'report': report,
         'madhab': madhab,
         'ocr_text': ingredients_text,
+        'has_halal_logo': has_halal_logo,
+        'halal_logo_name': halal_logo_name,
     })
 
 

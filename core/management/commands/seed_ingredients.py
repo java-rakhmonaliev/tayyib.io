@@ -172,6 +172,7 @@ INGREDIENTS = [
     {"name": "e966", "status": "halal", "source": "Lactitol. Derived from milk lactose, halal.", "aliases": ["e966"]},
     {"name": "e967", "status": "halal", "source": "Xylitol. Plant-derived, halal.", "aliases": ["e967"]},
     {"name": "e968", "status": "halal", "source": "Erythritol. Fermentation product, halal.", "aliases": ["e968", "erythritol"]},
+    {"name": "egg", "status": "halal", "source": "Eggs are halal in all madhabs.", "aliases": ["eggs", "whole egg", "egg white", "egg yolk", "dried egg", "egg powder"]},
 ]
 
 
