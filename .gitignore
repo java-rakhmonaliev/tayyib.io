@@ -9,3 +9,10 @@ media/
 .DS_Store
 EOF
 .env
+.idea
+
+infra/terraform.tfvars
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.backup
+infra/.terraform.lock.hcl
