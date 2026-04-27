@@ -3,8 +3,9 @@ from django.db import models
 
 class Madhab(models.TextChoices):
     HANAFI = 'hanafi', 'Hanafi'
+    MALIKI = 'maliki', 'Maliki'
     SHAFII = 'shafii', "Shafi'i"
-
+    HANBALI = 'hanbali', 'Hanbali'
 
 class IngredientStatus(models.TextChoices):
     HALAL = 'halal', 'Halal'
@@ -12,7 +13,8 @@ class IngredientStatus(models.TextChoices):
     QUESTIONABLE = 'questionable', 'Questionable'
     HANAFI_HARAM = 'hanafi_haram', 'Haram (Hanafi only)'
     SHAFII_HARAM = 'shafii_haram', "Haram (Shafi'i only)"
-
+    MALIKI_HARAM = 'maliki_haram', 'Haram (Maliki only)'
+    HANBALI_HARAM = 'hanbali_haram', 'Haram (Hanbali only)'
 
 class Ingredient(models.Model):
     name = models.CharField(max_length=255, unique=True, db_index=True)
@@ -28,9 +30,13 @@ class Ingredient(models.Model):
 
     def get_status_for_madhab(self, madhab: str) -> str:
         if self.status == IngredientStatus.HANAFI_HARAM:
-            return IngredientStatus.HARAM if madhab == Madhab.HANAFI else IngredientStatus.QUESTIONABLE
+            return IngredientStatus.HARAM if madhab == Madhab.HANAFI else IngredientStatus.HALAL
         if self.status == IngredientStatus.SHAFII_HARAM:
-            return IngredientStatus.HARAM if madhab == Madhab.SHAFII else IngredientStatus.QUESTIONABLE
+            return IngredientStatus.HARAM if madhab == Madhab.SHAFII else IngredientStatus.HALAL
+        if self.status == IngredientStatus.MALIKI_HARAM:
+            return IngredientStatus.HARAM if madhab == Madhab.MALIKI else IngredientStatus.HALAL
+        if self.status == IngredientStatus.HANBALI_HARAM:
+            return IngredientStatus.HARAM if madhab == Madhab.HANBALI else IngredientStatus.HALAL
         return self.status
 
     class Meta:
@@ -57,3 +63,16 @@ class AnalysisResult(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+
+from django.contrib.auth.models import User
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    madhab = models.CharField(max_length=10, choices=Madhab.choices, default=Madhab.HANAFI)
+    country = models.CharField(max_length=100, blank=True, default='')
+    total_scans = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} — {self.madhab}"

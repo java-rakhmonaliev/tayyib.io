@@ -17,3 +17,11 @@ class AnalysisResultAdmin(admin.ModelAdmin):
     search_fields = ['product_name', 'barcode', 'raw_text']
     readonly_fields = ['raw_text', 'ingredient_results', 'unknown_ingredients', 'created_at']
     ordering = ['-created_at']
+
+from .models import Ingredient, AnalysisResult, UserProfile
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ['user', 'madhab', 'country', 'total_scans', 'created_at']
+    list_filter = ['madhab', 'country']
+    search_fields = ['user__username', 'user__email']

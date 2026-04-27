@@ -142,6 +142,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'drf_spectacular',
+    'rest_framework_simplejwt',
     'rest_framework',
     'core',
 ]
@@ -216,4 +217,17 @@ SPECTACULAR_SETTINGS = {
     'TITLE': 'Tayyib.io API',
     'DESCRIPTION': 'Halal ingredient checker API',
     'VERSION': '1.0.0',
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=7),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
 }

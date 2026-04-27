@@ -3,6 +3,38 @@ import json
 from groq import Groq
 from django.conf import settings
 
+MADHAB_RULES = {
+    'hanafi': """HANAFI RULES (strictest on seafood):
+- Only scaled bony fish are halal
+- Shrimp, prawns, crab, lobster, squid, octopus, shellfish, mussels, oysters, clams, scallops = HARAM
+- Shark = HARAM
+- Horse = HARAM
+- Wine vinegar = HARAM""",
+
+    'maliki': """MALIKI RULES:
+- All fish halal
+- Shrimp, prawns = HALAL
+- Crab, lobster, shellfish = HARAM
+- Shark = HALAL
+- Horse = HALAL
+- Wine vinegar = HALAL""",
+
+    'shafii': """SHAFI'I RULES (most permissive on seafood):
+- All seafood halal without exception
+- Shrimp, prawns, crab, lobster, shellfish, squid, octopus = HALAL
+- Shark = HALAL
+- Horse = HALAL
+- Wine vinegar = HALAL""",
+
+    'hanbali': """HANBALI RULES:
+- All fish halal
+- Shrimp, prawns = HALAL
+- Crab, lobster = HALAL
+- Shark = HALAL
+- Horse = HALAL
+- Wine vinegar = HARAM""",
+}
+
 
 def extract_and_classify_from_image(image_file, madhab: str) -> dict:
     client = Groq(api_key=settings.GROQ_API_KEY)
@@ -18,60 +50,56 @@ def extract_and_classify_from_image(image_file, madhab: str) -> dict:
     else:
         media_type = 'image/jpeg'
 
-    prompt = f"""You are a strict Islamic halal food auditor. Analyze this food product label image.
+    madhab_context = MADHAB_RULES.get(madhab, MADHAB_RULES['hanafi'])
+
+    prompt = f"""You are a strict Islamic halal food auditor with knowledge of all four schools of thought. Analyze this food product label image.
 
 STEP 1 — HALAL LOGO CHECK:
-Look carefully for any halal certification logo, stamp, or marking on the label.
+Look for any halal certification logo, stamp, or marking.
 Examples: MUI, JAKIM, IFANCA, HFA, ISWA, HMC, or any text saying "Halal Certified".
-Set has_halal_logo to true ONLY if you clearly see one. Do not guess.
+Set has_halal_logo to true ONLY if you clearly see one.
 
 STEP 2 — EXTRACT INGREDIENTS:
 Extract the full ingredient list exactly as written on the label.
 
 STEP 3 — CLASSIFY EACH INGREDIENT:
-Use these strict rules based on madhab: {madhab}
+Madhab: {madhab.upper()}
 
-UNIVERSAL HARAM (both madhabs):
+{madhab_context}
+
+UNIVERSAL HARAM (all madhabs):
 - Pork, lard, pig-derived anything → haram
 - Blood and blood products → haram
-- Alcohol as a main ingredient (wine, beer, spirits) → haram
-- Any ingredient explicitly stated as pork-derived or animal-derived from non-halal slaughter → haram
-- Carmine / E120 / cochineal (insect-derived red dye) → haram
+- Alcohol as main ingredient (wine, beer, spirits) → haram
+- Carmine / E120 / cochineal → haram
 - L-Cysteine (E920) from pork or human hair → haram
 
-ANIMAL-DERIVED AMBIGUOUS INGREDIENTS — BE VERY CAREFUL:
-- Gelatin: if source not specified → questionable. If stated as pork → haram. If stated as fish/halal beef → halal.
-- Glycerin/Glycerol: if source not stated → questionable. If "vegetable glycerin" → halal.
-- Mono and diglycerides (E471): source not stated → questionable.
-- Saturated fat: if explicitly stated as animal fat → haram. If source unclear → questionable. If stated as vegetable → halal.
-- Natural flavor / Natural flavouring: always → questionable (source unknown).
-- Artificial flavor: → questionable (may contain animal derivatives).
-- Rennet: if animal rennet not specified as halal → questionable.
-- Whey: → questionable (depends on rennet used in cheese).
-- Casein / Sodium caseinate: → questionable.
-- Enzymes: if source not stated → questionable.
-- Lecithin: if "soy lecithin" or "sunflower lecithin" → halal. If just "lecithin" → questionable.
-- Vitamin D3: often animal-derived → questionable unless stated as plant-based.
-- Omega-3: if from fish → halal (both madhabs). If source unclear → questionable.
+AMBIGUOUS — QUESTIONABLE IF SOURCE UNKNOWN:
+- Gelatin: unspecified source → questionable. Pork → haram. Fish/halal beef → halal.
+- Glycerin/Glycerol: vegetable → halal. Unspecified → questionable.
+- Mono and diglycerides (E471): unspecified → questionable.
+- Natural flavour/flavoring: always → questionable.
+- Artificial flavoring: → questionable.
+- Rennet: animal unspecified → questionable.
+- Whey, casein, sodium caseinate: → questionable.
+- Enzymes: unspecified source → questionable.
+- Lecithin: soy/sunflower lecithin → halal. Just "lecithin" → questionable.
+- Vitamin D3: → questionable unless stated plant-based.
+- Saturated fat: animal-stated → haram. Vegetable-stated → halal. Unclear → questionable.
 
-MADHAB-SPECIFIC RULES:
-{"HANAFI RULES: Only scaled fish (bony fish) are halal. Shrimp, prawns, crab, lobster, squid, octopus, shellfish, mussels, oysters, clams, scallops are ALL HARAM in Hanafi madhab. Shark is haram in Hanafi." if madhab == "hanafi" else "SHAFI'I RULES: All seafood is halal including shrimp, prawns, crab, lobster, shellfish, squid, octopus, fish of all types."}
-
-ALWAYS HALAL (both madhabs):
+ALWAYS HALAL:
 - All fruits, vegetables, grains, legumes, nuts, seeds
-- Water, salt, sugar, vinegar
+- Water, salt, sugar, honey, all spices and herbs
 - Plant-based oils (palm, sunflower, canola, olive, soy, corn)
-- Eggs (always halal, no exceptions)
-- Milk and dairy from halal animals (cow, goat, sheep) UNLESS rennet is questionable
-- Honey
-- All spices and herbs
-- Synthetic/mineral additives (E-numbers that are mineral or synthetic — e.g. E330 citric acid, E500 sodium carbonate, E202 potassium sorbate)
-- Soy sauce (fermentation alcohol is trace and transformed)
-- Vinegar of any type except wine vinegar which is questionable
+- Eggs (always halal, no exceptions in any madhab)
+- Milk and dairy from halal animals UNLESS rennet is questionable
+- Synthetic/mineral E-numbers (E330, E500, E202, E211 etc.)
+- Soy sauce (trace fermentation alcohol is transformed)
 
-GOLDEN RULE: If you are not 100% certain something is halal, mark it questionable. Never upgrade questionable to halal due to assumption. A false halal verdict is worse than a false haram verdict.
+GOLDEN RULE: If not 100% certain something is halal, mark it questionable.
+A false halal verdict is worse than a false haram verdict.
 
-Respond ONLY with this exact valid JSON format, no extra text:
+Respond ONLY with this exact JSON format, no extra text:
 {{
   "has_halal_logo": true or false,
   "halal_logo_name": "certification body name or null",
@@ -80,12 +108,12 @@ Respond ONLY with this exact valid JSON format, no extra text:
     {{
       "ingredient": "exact ingredient name",
       "status": "halal|haram|questionable",
-      "reason": "max 10 words explaining why"
+      "reason": "max 10 words"
     }}
   ]
 }}
 
-If no ingredient list is visible: {{"has_halal_logo": false, "halal_logo_name": null, "ingredients_text": "", "results": []}}"""
+If no ingredient list visible: {{"has_halal_logo": false, "halal_logo_name": null, "ingredients_text": "", "results": []}}"""
 
     try:
         response = client.chat.completions.create(
@@ -110,7 +138,6 @@ If no ingredient list is visible: {{"has_halal_logo": false, "halal_logo_name": 
 
         raw = response.choices[0].message.content.strip()
 
-        # Strip markdown fences
         if "```" in raw:
             parts = raw.split("```")
             for part in parts:
@@ -121,7 +148,6 @@ If no ingredient list is visible: {{"has_halal_logo": false, "halal_logo_name": 
                     raw = part.strip()
                     break
 
-        # Find JSON object boundaries
         start = raw.find("{")
         end = raw.rfind("}") + 1
         if start != -1 and end > start:

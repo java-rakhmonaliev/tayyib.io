@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views, api_views
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from . import views, api_views, auth_views
 
 urlpatterns = [
     # Web routes
@@ -20,4 +21,10 @@ urlpatterns = [
     # API Docs
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+
+    # Auth API
+    path('api/auth/register/', auth_views.register, name='api_register'),
+    path('api/auth/login/', auth_views.login, name='api_login'),
+    path('api/auth/profile/', auth_views.profile, name='api_profile'),
+    path('api/auth/profile/update/', auth_views.update_profile, name='api_update_profile'),
 ]

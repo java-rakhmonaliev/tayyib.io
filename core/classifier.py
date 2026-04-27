@@ -20,6 +20,8 @@ STATUS_PRIORITY = {
     IngredientStatus.HARAM: 4,
     IngredientStatus.HANAFI_HARAM: 3,
     IngredientStatus.SHAFII_HARAM: 3,
+    IngredientStatus.MALIKI_HARAM: 3,
+    IngredientStatus.HANBALI_HARAM: 3,
     IngredientStatus.QUESTIONABLE: 2,
     IngredientStatus.HALAL: 1,
 }
