@@ -17,8 +17,8 @@ def api_analyze_text(request):
     if not raw_text:
         return Response({'error': 'ingredients field is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    if madhab not in [Madhab.HANAFI, Madhab.SHAFII]:
-        return Response({'error': 'madhab must be hanafi or shafii.'}, status=status.HTTP_400_BAD_REQUEST)
+    if madhab not in [Madhab.HANAFI, Madhab.MALIKI, Madhab.SHAFII, Madhab.HANBALI]:
+        return Response({'error': 'madhab must be hanafi, maliki, shafii or hanbali.'}, status=status.HTTP_400_BAD_REQUEST)
 
     report = classify(raw_text, madhab)
     result = _save_result(raw_text, madhab, report, product_name=request.data.get('product_name', ''))
