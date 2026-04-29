@@ -8,6 +8,7 @@ media/
 *.egg-info/
 .DS_Store
 EOF
+env
 .env
 .idea
 
