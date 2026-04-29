@@ -1,7 +1,5 @@
 from django.urls import path
-from . import views, api_views
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from . import views, api_views, auth_views
 from . import views, api_views, auth_views, community_views
 
 urlpatterns = [
