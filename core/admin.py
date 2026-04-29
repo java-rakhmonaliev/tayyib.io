@@ -25,3 +25,18 @@ class UserProfileAdmin(admin.ModelAdmin):
     list_display = ['user', 'madhab', 'country', 'total_scans', 'created_at']
     list_filter = ['madhab', 'country']
     search_fields = ['user__username', 'user__email']
+
+
+from .models import Ingredient, AnalysisResult, UserProfile, ProductCommunityReport, ProductCommunityScore
+
+@admin.register(ProductCommunityReport)
+class ProductCommunityReportAdmin(admin.ModelAdmin):
+    list_display = ['user', 'barcode', 'product_name', 'vote', 'madhab', 'created_at']
+    list_filter = ['vote', 'madhab']
+    search_fields = ['barcode', 'product_name', 'user__username']
+
+@admin.register(ProductCommunityScore)
+class ProductCommunityScoreAdmin(admin.ModelAdmin):
+    list_display = ['barcode', 'product_name', 'community_verdict', 'total_votes', 'confirmed_halal_count', 'found_issue_count']
+    list_filter = ['community_verdict']
+    search_fields = ['barcode', 'product_name']

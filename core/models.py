@@ -76,3 +76,53 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.username} — {self.madhab}"
+
+
+class VoteChoice(models.TextChoices):
+    CONFIRMED_HALAL = 'confirmed_halal', 'Confirmed Halal'
+    FOUND_ISSUE = 'found_issue', 'Found Issue'
+    NOT_SURE = 'not_sure', 'Not Sure'
+
+
+class ProductCommunityReport(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports')
+    barcode = models.CharField(max_length=50, db_index=True)
+    product_name = models.CharField(max_length=255, blank=True)
+    vote = models.CharField(max_length=20, choices=VoteChoice.choices)
+    madhab = models.CharField(max_length=10, choices=Madhab.choices)
+    country = models.CharField(max_length=100, blank=True)
+    note = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['user', 'barcode']
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} — {self.barcode} — {self.vote}"
+
+
+class ProductCommunityScore(models.Model):
+    barcode = models.CharField(max_length=50, unique=True, db_index=True)
+    product_name = models.CharField(max_length=255, blank=True)
+    total_votes = models.PositiveIntegerField(default=0)
+    confirmed_halal_count = models.PositiveIntegerField(default=0)
+    found_issue_count = models.PositiveIntegerField(default=0)
+    not_sure_count = models.PositiveIntegerField(default=0)
+    community_verdict = models.CharField(max_length=20, default='unverified')
+    last_updated = models.DateTimeField(auto_now=True)
+
+    def recalculate(self):
+        self.total_votes = self.confirmed_halal_count + self.found_issue_count + self.not_sure_count
+        if self.total_votes == 0:
+            self.community_verdict = 'unverified'
+        elif self.found_issue_count / self.total_votes >= 0.3:
+            self.community_verdict = 'haram'
+        elif self.confirmed_halal_count / self.total_votes >= 0.7:
+            self.community_verdict = 'halal'
+        else:
+            self.community_verdict = 'questionable'
+        self.save()
+
+    def __str__(self):
+        return f"{self.barcode} — {self.community_verdict} ({self.total_votes} votes)"

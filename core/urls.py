@@ -2,6 +2,7 @@ from django.urls import path
 from . import views, api_views
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from . import views, api_views, auth_views
+from . import views, api_views, auth_views, community_views
 
 urlpatterns = [
     # Web routes
@@ -27,4 +28,9 @@ urlpatterns = [
     path('api/auth/login/', auth_views.login, name='api_login'),
     path('api/auth/profile/', auth_views.profile, name='api_profile'),
     path('api/auth/profile/update/', auth_views.update_profile, name='api_update_profile'),
+
+    # Community
+    path('api/community/report/', community_views.submit_report, name='community_report'),
+    path('api/community/score/<str:barcode>/', community_views.get_score, name='community_score'),
+    path('api/community/my-vote/<str:barcode>/', community_views.my_vote, name='community_my_vote'),
 ]
