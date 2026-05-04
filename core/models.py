@@ -2,26 +2,28 @@ from django.db import models
 
 
 class Madhab(models.TextChoices):
-    HANAFI = 'hanafi', 'Hanafi'
-    MALIKI = 'maliki', 'Maliki'
-    SHAFII = 'shafii', "Shafi'i"
-    HANBALI = 'hanbali', 'Hanbali'
+    HANAFI = "hanafi", "Hanafi"
+    MALIKI = "maliki", "Maliki"
+    SHAFII = "shafii", "Shafi'i"
+    HANBALI = "hanbali", "Hanbali"
+
 
 class IngredientStatus(models.TextChoices):
-    HALAL = 'halal', 'Halal'
-    HARAM = 'haram', 'Haram'
-    QUESTIONABLE = 'questionable', 'Questionable'
-    HANAFI_HARAM = 'hanafi_haram', 'Haram (Hanafi only)'
-    SHAFII_HARAM = 'shafii_haram', "Haram (Shafi'i only)"
-    MALIKI_HARAM = 'maliki_haram', 'Haram (Maliki only)'
-    HANBALI_HARAM = 'hanbali_haram', 'Haram (Hanbali only)'
+    HALAL = "halal", "Halal"
+    HARAM = "haram", "Haram"
+    QUESTIONABLE = "questionable", "Questionable"
+    HANAFI_HARAM = "hanafi_haram", "Haram (Hanafi only)"
+    SHAFII_HARAM = "shafii_haram", "Haram (Shafi'i only)"
+    MALIKI_HARAM = "maliki_haram", "Haram (Maliki only)"
+    HANBALI_HARAM = "hanbali_haram", "Haram (Hanbali only)"
+
 
 class Ingredient(models.Model):
     name = models.CharField(max_length=255, unique=True, db_index=True)
     aliases = models.JSONField(default=list, blank=True)  # alternative names / e-codes
     status = models.CharField(max_length=20, choices=IngredientStatus.choices)
-    source = models.TextField(blank=True)         # why it's haram/questionable
-    source_url = models.URLField(blank=True)      # citation link
+    source = models.TextField(blank=True)  # why it's haram/questionable
+    source_url = models.URLField(blank=True)  # citation link
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -30,30 +32,48 @@ class Ingredient(models.Model):
 
     def get_status_for_madhab(self, madhab: str) -> str:
         if self.status == IngredientStatus.HANAFI_HARAM:
-            return IngredientStatus.HARAM if madhab == Madhab.HANAFI else IngredientStatus.HALAL
+            return (
+                IngredientStatus.HARAM
+                if madhab == Madhab.HANAFI
+                else IngredientStatus.HALAL
+            )
         if self.status == IngredientStatus.SHAFII_HARAM:
-            return IngredientStatus.HARAM if madhab == Madhab.SHAFII else IngredientStatus.HALAL
+            return (
+                IngredientStatus.HARAM
+                if madhab == Madhab.SHAFII
+                else IngredientStatus.HALAL
+            )
         if self.status == IngredientStatus.MALIKI_HARAM:
-            return IngredientStatus.HARAM if madhab == Madhab.MALIKI else IngredientStatus.HALAL
+            return (
+                IngredientStatus.HARAM
+                if madhab == Madhab.MALIKI
+                else IngredientStatus.HALAL
+            )
         if self.status == IngredientStatus.HANBALI_HARAM:
-            return IngredientStatus.HARAM if madhab == Madhab.HANBALI else IngredientStatus.HALAL
+            return (
+                IngredientStatus.HARAM
+                if madhab == Madhab.HANBALI
+                else IngredientStatus.HALAL
+            )
         return self.status
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]
 
 
 class AnalysisResult(models.Model):
     # Input
-    raw_text = models.TextField()                          # original ingredient text
+    raw_text = models.TextField()  # original ingredient text
     barcode = models.CharField(max_length=50, blank=True)
     product_name = models.CharField(max_length=255, blank=True)
-    madhab = models.CharField(max_length=10, choices=Madhab.choices, default=Madhab.HANAFI)
+    madhab = models.CharField(
+        max_length=10, choices=Madhab.choices, default=Madhab.HANAFI
+    )
 
     # Output
     overall_status = models.CharField(max_length=20, choices=IngredientStatus.choices)
-    ingredient_results = models.JSONField(default=list)    # per-ingredient breakdown
-    unknown_ingredients = models.JSONField(default=list)   # not found in DB, sent to AI
+    ingredient_results = models.JSONField(default=list)  # per-ingredient breakdown
+    unknown_ingredients = models.JSONField(default=list)  # not found in DB, sent to AI
     ai_used = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -62,15 +82,18 @@ class AnalysisResult(models.Model):
         return f"{self.product_name or 'Manual'} — {self.overall_status} ({self.created_at:%Y-%m-%d})"
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
 
 from django.contrib.auth.models import User
 
+
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    madhab = models.CharField(max_length=10, choices=Madhab.choices, default=Madhab.HANAFI)
-    country = models.CharField(max_length=100, blank=True, default='')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    madhab = models.CharField(
+        max_length=10, choices=Madhab.choices, default=Madhab.HANAFI
+    )
+    country = models.CharField(max_length=100, blank=True, default="")
     total_scans = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -79,13 +102,13 @@ class UserProfile(models.Model):
 
 
 class VoteChoice(models.TextChoices):
-    CONFIRMED_HALAL = 'confirmed_halal', 'Confirmed Halal'
-    FOUND_ISSUE = 'found_issue', 'Found Issue'
-    NOT_SURE = 'not_sure', 'Not Sure'
+    CONFIRMED_HALAL = "confirmed_halal", "Confirmed Halal"
+    FOUND_ISSUE = "found_issue", "Found Issue"
+    NOT_SURE = "not_sure", "Not Sure"
 
 
 class ProductCommunityReport(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reports")
     barcode = models.CharField(max_length=50, db_index=True)
     product_name = models.CharField(max_length=255, blank=True)
     vote = models.CharField(max_length=20, choices=VoteChoice.choices)
@@ -95,8 +118,8 @@ class ProductCommunityReport(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ['user', 'barcode']
-        ordering = ['-created_at']
+        unique_together = ["user", "barcode"]
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"{self.user.username} — {self.barcode} — {self.vote}"
@@ -109,20 +132,72 @@ class ProductCommunityScore(models.Model):
     confirmed_halal_count = models.PositiveIntegerField(default=0)
     found_issue_count = models.PositiveIntegerField(default=0)
     not_sure_count = models.PositiveIntegerField(default=0)
-    community_verdict = models.CharField(max_length=20, default='unverified')
+    community_verdict = models.CharField(max_length=20, default="unverified")
     last_updated = models.DateTimeField(auto_now=True)
 
     def recalculate(self):
-        self.total_votes = self.confirmed_halal_count + self.found_issue_count + self.not_sure_count
+        self.total_votes = (
+            self.confirmed_halal_count + self.found_issue_count + self.not_sure_count
+        )
         if self.total_votes == 0:
-            self.community_verdict = 'unverified'
+            self.community_verdict = "unverified"
         elif self.found_issue_count / self.total_votes >= 0.3:
-            self.community_verdict = 'haram'
+            self.community_verdict = "haram"
         elif self.confirmed_halal_count / self.total_votes >= 0.7:
-            self.community_verdict = 'halal'
+            self.community_verdict = "halal"
         else:
-            self.community_verdict = 'questionable'
+            self.community_verdict = "questionable"
         self.save()
 
     def __str__(self):
         return f"{self.barcode} — {self.community_verdict} ({self.total_votes} votes)"
+
+
+# ── Phase 3: Country-specific product cache ───────────────────────────────────
+
+
+class ProductSource(models.TextChoices):
+    OPEN_FOOD_FACTS = "openfoodfacts", "Open Food Facts"
+    AI_AGENT = "ai_agent", "AI Web Search Agent"
+    MANUAL = "manual", "Manual Entry"
+
+
+class CountryProduct(models.Model):
+    """
+    Caches product data per country.
+    Same barcode can have different ingredients in different countries.
+    Keyed by (barcode, country_code) — e.g. ('8801234567890', 'KR').
+    country_code='' means global / country-unknown (Open Food Facts fallback).
+    """
+
+    barcode = models.CharField(max_length=100, db_index=True)
+    country_code = models.CharField(
+        max_length=2,
+        blank=True,
+        default="",
+        help_text="ISO 3166-1 alpha-2, e.g. KR, DE, US. Blank = global.",
+    )
+    product_name = models.CharField(max_length=500, blank=True)
+    ingredients_text = models.TextField(blank=True)
+    brand = models.CharField(max_length=200, blank=True)
+    image_url = models.URLField(blank=True)
+    source = models.CharField(
+        max_length=20,
+        choices=ProductSource.choices,
+        default=ProductSource.OPEN_FOOD_FACTS,
+    )
+    # Confidence flag set by AI agent when it couldn't find reliable data
+    low_confidence = models.BooleanField(default=False)
+    last_fetched = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ["barcode", "country_code"]
+        ordering = ["-last_fetched"]
+        indexes = [
+            models.Index(fields=["barcode", "country_code"]),
+        ]
+
+    def __str__(self):
+        cc = self.country_code or "GLOBAL"
+        return f"{self.product_name or self.barcode} [{cc}] via {self.source}"
