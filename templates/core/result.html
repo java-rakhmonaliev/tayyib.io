@@ -1,164 +1,127 @@
 {% extends "base.html" %}
 {% block title %}Result — {{ result.product_name|default:"Halal Check" }}{% endblock %}
-{% block content %}
 
+{% block content %}
 {% with status=result.overall_status %}
 
-<!-- VERDICT BANNER -->
-<div class="verdict-banner verdict-{{ status }}">
-    <div style="position:absolute;top:-15px;right:20px;transform:rotate(3deg);">
-        <span style="font-size:0.7rem;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;padding:0.3rem 0.75rem;border:3px solid var(--black);background:var(--black);color:var(--yellow);">
-            {{ result.madhab|upper }} MADHAB
-        </span>
+<!-- Top Bar -->
+<div class="flex items-center justify-between mb-6">
+    <a href="/" class="flex items-center gap-x-2 text-[#8A8A8A] hover:text-white transition-colors">
+        <span class="text-xl">←</span>
+        <span class="font-semibold">Back</span>
+    </a>
+    
+    <div class="flex items-center gap-x-2">
+        <span class="px-3 py-1 text-xs font-bold tracking-widest bg-[#1C1C1C] rounded-full">{{ result.madhab|upper }}</span>
+        {% if result.ai_used %}
+        <span class="px-3 py-1 text-xs font-bold tracking-widest bg-[#3D7EFF] text-white rounded-full">AI</span>
+        {% endif %}
     </div>
-    <div class="verdict-icon">
+</div>
+
+<!-- Main Verdict -->
+<div class="tayyib-card p-8 mb-8 text-center">
+    <div class="text-7xl mb-4">
         {% if status == 'halal' %}✅{% elif status == 'haram' %}❌{% else %}⚠️{% endif %}
     </div>
-    <div style="flex:1;">
-        <div class="verdict-label">{{ status|upper }}</div>
-        <div class="verdict-sub">
-            {% if result.product_name %}{{ result.product_name }}{% else %}Manual Check{% endif %}
-            {% if result.ai_used %} &nbsp;·&nbsp; <span style="font-size:0.75rem;opacity:0.8;">AI-assisted</span>{% endif %}
-        </div>
-    </div>
-    <a href="/" class="btn btn-black" style="flex-shrink:0;">← New Check</a>
+    
+    <div class="text-5xl font-bold tracking-tighter mb-2">{{ status|upper }}</div>
+    <div class="text-2xl text-[#8A8A8A]">{{ result.product_name|default:"Manual Check" }}</div>
 </div>
 
 {% endwith %}
 
-<!-- HALAL LOGO DETECTED -->
+<!-- Halal Logo -->
 {% if has_halal_logo %}
-<div style="background:var(--green);border:4px solid var(--black);padding:0.875rem 1.25rem;margin-bottom:1.5rem;box-shadow:6px 6px 0px 0px var(--black);display:flex;align-items:center;gap:0.75rem;">
-    <span style="font-size:1.5rem;">☑️</span>
+<div class="tayyib-card bg-[#052e16] border-[#166534] p-6 mb-6 flex items-center gap-4">
+    <div class="text-5xl">☑️</div>
     <div>
-        <p style="font-size:0.75rem;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;">Halal Certified</p>
-        <p style="font-size:0.8rem;font-weight:700;">Halal certification logo detected{% if halal_logo_name %}: <strong>{{ halal_logo_name }}</strong>{% endif %}. Trust the certification on this product.</p>
+        <div class="font-bold text-[#4ade80] text-xl">Halal Certified</div>
+        <div class="text-[#86efac]">Certification logo detected. You can trust this product.</div>
     </div>
 </div>
 {% endif %}
 
-<!-- PRODUCT INFO (barcode) -->
+<!-- Product Info -->
 {% if product %}
-<div class="card" style="margin-bottom:1.5rem;">
-    <div class="card-body" style="display:flex;gap:1rem;align-items:center;">
-        {% if product.image_url %}
-        <img src="{{ product.image_url }}" style="width:80px;height:80px;object-fit:contain;border:4px solid var(--black);">
-        {% endif %}
-        <div>
-            <p style="font-weight:900;font-size:1.1rem;">{{ product.product_name }}</p>
-            {% if product.brands %}<p style="font-weight:700;font-size:0.85rem;color:#555;text-transform:uppercase;letter-spacing:0.05em;">{{ product.brands }}</p>{% endif %}
-            <p style="font-size:0.75rem;font-weight:700;color:#777;margin-top:0.25rem;">Barcode: {{ result.barcode }}</p>
-        </div>
+<div class="tayyib-card p-6 mb-6 flex gap-5">
+    {% if product.image_url %}
+    <img src="{{ product.image_url }}" class="w-28 h-28 object-contain rounded-2xl border border-[#2A2A2A]">
+    {% endif %}
+    <div class="flex-1 pt-1">
+        <div class="font-semibold text-3xl">{{ product.product_name }}</div>
+        {% if product.brands %}<div class="text-[#8A8A8A] mt-1">{{ product.brands }}</div>{% endif %}
+        <div class="text-xs text-[#555] mt-3 font-mono">Barcode: {{ result.barcode }}</div>
     </div>
 </div>
 {% endif %}
 
-<!-- OCR TEXT -->
-{% if ocr_text %}
-<div class="card" style="margin-bottom:1.5rem;">
-    <div class="card-header"><span>📷</span><h2>Extracted Text (OCR)</h2></div>
-    <div class="card-body">
-        <pre style="font-size:0.8rem;font-weight:700;white-space:pre-wrap;overflow-x:auto;font-family:'Space Grotesk',sans-serif;">{{ ocr_text }}</pre>
+<!-- Ingredients -->
+<div class="tayyib-card mb-6 overflow-hidden">
+    <div class="px-6 py-4 border-b border-[#2A2A2A] flex items-center justify-between">
+        <div class="font-semibold text-xl">Ingredients</div>
+        <div class="text-xs text-[#8A8A8A]">{{ result.ingredient_results|length }} items</div>
     </div>
-</div>
-{% endif %}
-
-<!-- INGREDIENT BREAKDOWN -->
-<div class="card">
-    <div class="card-header"><span>🔬</span><h2>Ingredient Breakdown</h2>
-        <span style="margin-left:auto;font-size:0.7rem;color:rgba(255,255,255,0.6);font-weight:700;">{{ result.ingredient_results|length }} ingredients</span>
-    </div>
-    <div class="card-body" style="padding:1rem;">
+    
+    <div class="divide-y divide-[#2A2A2A]">
         {% for ing in result.ingredient_results %}
-        <div class="ing-row ing-{{ ing.status }}">
-            <div class="ing-header">
-                <span class="ing-name">
-                    {% if ing.status == 'halal' %}✅{% elif ing.status == 'haram' %}❌{% else %}⚠️{% endif %}
-                    {{ ing.original }}
+        <div class="px-6 py-5 flex gap-4 items-start">
+            <div class="text-2xl w-8 flex-shrink-0">
+                {% if ing.status == 'halal' %}✅{% elif ing.status == 'haram' %}❌{% else %}⚠️{% endif %}
+            </div>
+            
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-x-2 flex-wrap">
+                    <span class="font-semibold text-lg">{{ ing.original }}</span>
                     {% if ing.matched_name and ing.matched_name != ing.original %}
-                    <span style="font-size:0.78rem;font-weight:700;opacity:0.6;">({{ ing.matched_name }})</span>
+                    <span class="text-sm text-[#8A8A8A]">({{ ing.matched_name }})</span>
                     {% endif %}
                     {% if ing.ai_classified %}
-                    <span style="font-size:0.65rem;font-weight:900;background:var(--violet);border:2px solid var(--black);padding:0.1rem 0.4rem;text-transform:uppercase;letter-spacing:0.05em;margin-left:0.25rem;">AI</span>
+                    <span class="px-2 py-px text-[10px] font-black bg-[#3D7EFF] text-white rounded">AI</span>
                     {% endif %}
-                </span>
-                <span class="badge badge-{{ ing.status }}">{{ ing.status|upper }}</span>
-            </div>
-            {% if ing.source %}
-            <div class="ing-source">
-                {{ ing.source }}
-                {% if ing.source_url %}
-                <a href="{{ ing.source_url }}" target="_blank" style="font-weight:900;border-bottom:2px solid currentColor;color:inherit;text-decoration:none;margin-left:0.4rem;">↗ Source</a>
+                </div>
+                
+                {% if ing.source %}
+                <div class="text-sm text-[#8A8A8A] mt-1.5">{{ ing.source }}</div>
+                {% endif %}
+                
+                {% if ing.notes %}
+                <div class="text-xs text-[#555] mt-1">📌 {{ ing.notes }}</div>
                 {% endif %}
             </div>
-            {% endif %}
-            {% if ing.notes %}
-            <div class="ing-notes">📌 {{ ing.notes }}</div>
-            {% endif %}
+            
+            <div>
+                <span class="px-4 py-1 text-xs font-bold rounded-full status-{{ ing.status }}">
+                    {{ ing.status|upper }}
+                </span>
+            </div>
         </div>
         {% empty %}
-        <p style="font-weight:700;color:#666;text-transform:uppercase;font-size:0.85rem;">No ingredients could be parsed.</p>
+        <div class="px-6 py-10 text-center text-[#8A8A8A]">No ingredients found.</div>
         {% endfor %}
     </div>
 </div>
 
-<!-- UNKNOWNS -->
+<!-- Unknowns -->
 {% if result.unknown_ingredients %}
-<div class="card">
-    <div class="card-header"><span>❓</span><h2>Unrecognized Ingredients</h2></div>
-    <div class="card-body">
-        <p style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem;color:#555;">Not found in database — check with manufacturer.</p>
-        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
-            {% for unk in result.unknown_ingredients %}
-            <span style="background:var(--yellow);border:3px solid var(--black);padding:0.25rem 0.625rem;font-size:0.8rem;font-weight:900;text-transform:uppercase;box-shadow:3px 3px 0 var(--black);">{{ unk }}</span>
-            {% endfor %}
-        </div>
+<div class="tayyib-card p-6 mb-6">
+    <div class="font-semibold text-xl mb-4 flex items-center gap-x-2">❓ Unrecognized Ingredients</div>
+    <div class="flex flex-wrap gap-2">
+        {% for unk in result.unknown_ingredients %}
+        <span class="px-4 py-2 bg-[#111111] rounded-2xl text-sm border border-[#2A2A2A]">{{ unk }}</span>
+        {% endfor %}
     </div>
+    <div class="text-xs text-[#8A8A8A] mt-4">These were not in our database. Verify with the manufacturer.</div>
 </div>
 {% endif %}
 
-<!-- RAW TEXT -->
-<details style="margin-bottom:2rem;">
-    <summary style="cursor:pointer;font-size:0.75rem;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;padding:0.5rem 0;border-bottom:3px solid var(--black);">Show Raw Ingredient Text</summary>
-    <pre style="font-size:0.8rem;font-weight:700;white-space:pre-wrap;margin-top:0.75rem;padding:1rem;background:var(--cream);border:4px solid var(--black);font-family:'Space Grotesk',sans-serif;">{{ result.raw_text }}</pre>
+<!-- Raw Text -->
+<details class="tayyib-card p-6">
+    <summary class="cursor-pointer font-semibold text-[#8A8A8A] flex items-center justify-between">
+        Show original text
+        <span>↓</span>
+    </summary>
+    <pre class="mt-4 text-sm bg-[#111111] p-4 rounded-2xl font-mono overflow-auto">{{ result.raw_text }}</pre>
 </details>
 
-<style>
-.verdict-banner {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.5rem;
-    border: 4px solid var(--black);
-    margin-bottom: 1.5rem;
-    position: relative;
-    overflow: visible;
-}
-.verdict-halal { background: var(--green); box-shadow: 8px 8px 0px 0px var(--black); }
-.verdict-haram { background: var(--red); box-shadow: 8px 8px 0px 0px var(--black); }
-.verdict-questionable { background: var(--yellow); box-shadow: 8px 8px 0px 0px var(--black); }
-.verdict-icon { font-size: 2.5rem; flex-shrink: 0; }
-.verdict-label { font-size: 2.5rem; font-weight: 900; text-transform: uppercase; letter-spacing: -0.02em; line-height: 1; }
-.verdict-halal .verdict-label, .verdict-halal .verdict-sub { color: var(--black); }
-.verdict-haram .verdict-label { color: var(--white); }
-.verdict-haram .verdict-sub { color: rgba(255,255,255,0.8); }
-.verdict-questionable .verdict-label, .verdict-questionable .verdict-sub { color: var(--black); }
-.verdict-sub { font-size: 0.85rem; font-weight: 700; margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em; }
-
-.ing-row {
-    border: 3px solid var(--black);
-    padding: 0.75rem 1rem;
-    margin-bottom: 0.625rem;
-    border-left: 8px solid var(--black);
-    transition: transform 0.1s ease;
-}
-.ing-row:hover { transform: translateX(3px); }
-.ing-halal { border-left-color: #10b981; background: #f0fdf4; }
-.ing-haram, .ing-hanafi_haram, .ing-shafii_haram { border-left-color: var(--red); background: #fff0f0; }
-.ing-questionable { border-left-color: #f59e0b; background: #fffbeb; }
-.ing-header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
-.ing-name { font-weight: 700; font-size: 0.95rem; }
-.ing-source { font-size: 0.8rem; font-weight: 700; color: #444; margin-top: 0.4rem; }
-.ing-notes { font-size: 0.78rem; font-weight: 700; color: #92400e; margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.03em; }
-</style>
 {% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Create Account — Tayyib{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto pt-8">
+    <div class="text-center mb-8">
+        <div class="mx-auto w-16 h-16 bg-white rounded-3xl flex items-center justify-center mb-4">
+            <span class="text-4xl">☪</span>
+        </div>
+        <h1 class="text-3xl font-bold tracking-tight">Create your account</h1>
+        <p class="text-[#8A8A8A] mt-1">Join thousands making informed halal choices</p>
+    </div>
+    
+    <div class="tayyib-card p-8">
+        <form id="register-form" class="space-y-5">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <div class="section-header">USERNAME</div>
+                    <input type="text" id="username" class="modern-input w-full" placeholder="coolmuslim" required>
+                </div>
+                <div>
+                    <div class="section-header">EMAIL</div>
+                    <input type="email" id="email" class="modern-input w-full" placeholder="you@email.com" required>
+                </div>
+            </div>
+            
+            <div>
+                <div class="section-header">PASSWORD</div>
+                <input type="password" id="password" class="modern-input w-full" placeholder="Min 8 characters" required>
+            </div>
+            
+            <div>
+                <div class="section-header">SCHOOL OF THOUGHT</div>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="flex items-center gap-x-2 bg-[#111111] p-3 rounded-2xl cursor-pointer border border-[#2A2A2A]">
+                        <input type="radio" name="madhab" value="hanafi" checked class="accent-[#3D7EFF]">
+                        <span class="text-sm font-medium">Hanafi</span>
+                    </label>
+                    <label class="flex items-center gap-x-2 bg-[#111111] p-3 rounded-2xl cursor-pointer border border-[#2A2A2A]">
+                        <input type="radio" name="madhab" value="maliki" class="accent-[#3D7EFF]">
+                        <span class="text-sm font-medium">Maliki</span>
+                    </label>
+                    <label class="flex items-center gap-x-2 bg-[#111111] p-3 rounded-2xl cursor-pointer border border-[#2A2A2A]">
+                        <input type="radio" name="madhab" value="shafii" class="accent-[#3D7EFF]">
+                        <span class="text-sm font-medium">Shafi'i</span>
+                    </label>
+                    <label class="flex items-center gap-x-2 bg-[#111111] p-3 rounded-2xl cursor-pointer border border-[#2A2A2A]">
+                        <input type="radio" name="madhab" value="hanbali" class="accent-[#3D7EFF]">
+                        <span class="text-sm font-medium">Hanbali</span>
+                    </label>
+                </div>
+            </div>
+            
+            <button type="submit" class="tayyib-btn w-full mt-4">Create Account</button>
+            
+            <div id="error" class="text-red-400 text-sm text-center hidden"></div>
+        </form>
+        
+        <div class="text-center mt-6 text-sm text-[#8A8A8A]">
+            Already have an account? <a href="/login/" class="font-semibold text-white">Sign in</a>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+document.getElementById('register-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = {
+        username: document.getElementById('username').value,
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+        madhab: document.querySelector('input[name="madhab"]:checked').value
+    };
+    
+    const errorDiv = document.getElementById('error');
+    
+    try {
+        await window.TayyibAuth.register(formData);
+        window.location.href = '/';
+    } catch (err) {
+        console.error('Register error:', err);
+        errorDiv.textContent = err.message || 'Registration failed. Check browser console (F12) for details.';
+        errorDiv.classList.remove('hidden');
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

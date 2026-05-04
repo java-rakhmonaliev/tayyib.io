@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Log in — Tayyib{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto pt-12">
+    <div class="text-center mb-8">
+        <div class="mx-auto w-16 h-16 bg-white rounded-3xl flex items-center justify-center mb-4">
+            <span class="text-4xl">☪</span>
+        </div>
+        <h1 class="text-3xl font-bold tracking-tight">Welcome back</h1>
+        <p class="text-[#8A8A8A] mt-1">Sign in to continue</p>
+    </div>
+    
+    <div class="tayyib-card p-8">
+        <form id="login-form" class="space-y-5">
+            <div>
+                <div class="section-header">USERNAME</div>
+                <input type="text" id="username" class="modern-input w-full" placeholder="yourusername" required>
+            </div>
+            
+            <div>
+                <div class="section-header">PASSWORD</div>
+                <input type="password" id="password" class="modern-input w-full" placeholder="••••••••" required>
+            </div>
+            
+            <button type="submit" class="tayyib-btn w-full mt-4">Sign in</button>
+            
+            <div id="error" class="text-red-400 text-sm text-center hidden"></div>
+        </form>
+        
+        <div class="text-center mt-6 text-sm text-[#8A8A8A]">
+            Don't have an account? <a href="/register/" class="font-semibold text-white">Create one</a>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const errorDiv = document.getElementById('error');
+    
+    try {
+        await window.TayyibAuth.login(username, password);
+        window.location.href = '/';
+    } catch (err) {
+        console.error('Login error:', err);
+        errorDiv.textContent = err.message || 'Login failed. Check browser console (F12) for details.';
+        errorDiv.classList.remove('hidden');
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

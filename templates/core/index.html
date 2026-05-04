@@ -1,165 +1,301 @@
 {% extends "base.html" %}
-{% block title %}TAYYIB — Check Halal Status{% endblock %}
+{% block title %}Tayyib — Check Halal Status{% endblock %}
 
 {% block content %}
-
-<!-- HERO -->
-<div style="margin-bottom:2rem;padding:2rem 1.5rem;background:var(--black);border:4px solid var(--black);box-shadow:8px 8px 0px 0px var(--red);position:relative;overflow:hidden;">
-    <div style="position:absolute;top:-20px;right:-20px;width:120px;height:120px;background:var(--yellow);border:4px solid var(--white);transform:rotate(15deg);opacity:0.15;"></div>
-    <div style="position:absolute;bottom:-30px;left:60%;width:80px;height:80px;background:var(--violet);border:4px solid var(--white);transform:rotate(-10deg);opacity:0.2;"></div>
-    <p style="font-size:0.7rem;font-weight:900;text-transform:uppercase;letter-spacing:0.2em;color:var(--yellow);margin-bottom:0.5rem;">Islamic Dietary Checker</p>
-    <h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:900;color:var(--white);text-transform:uppercase;line-height:1;letter-spacing:-0.02em;">
-        Is it <span style="color:var(--yellow);">Halal</span>?<br>Find out now.
+<!-- Hero -->
+<div class="text-center mb-10">
+    <div class="inline-flex items-center gap-x-2 px-4 py-1.5 bg-[#1C1C1C] rounded-3xl mb-4">
+        <span class="text-[#2DB87A]">☪</span>
+        <span class="text-xs font-semibold tracking-[1px] text-[#8A8A8A]">ISLAMIC DIETARY CHECKER</span>
+    </div>
+    
+    <h1 class="text-6xl font-bold tracking-tighter mb-3">
+        Is it <span class="text-[#2DB87A]">Halal</span>?
     </h1>
-    <p style="color:rgba(255,255,255,0.6);font-size:0.875rem;font-weight:700;margin-top:0.75rem;max-width:420px;">
-        Paste ingredients, scan a barcode, or upload a label photo. We check against our database + AI for unknowns.
+    <p class="text-xl text-[#8A8A8A] max-w-md mx-auto">
+        Paste ingredients, scan a barcode, or upload a photo.<br>
+        Instant results with madhab-specific rulings.
     </p>
 </div>
 
-<!-- CHECKER CARD -->
-<div class="card">
-    <div class="card-header">
-        <span>🔍</span>
-        <h2>Check Ingredients</h2>
+<!-- Madhab Selector -->
+<div class="mb-8">
+    <div class="section-header">YOUR SCHOOL OF THOUGHT</div>
+    <div class="flex bg-[#111111] p-1 rounded-3xl w-fit mx-auto" id="madhab-global">
+        <!-- Populated by JS -->
     </div>
-    <div class="card-body">
+</div>
 
-        <!-- MADHAB -->
-        <div class="madhab-row">
-            <label class="madhab-btn">
-            <input type="radio" name="madhab_global" value="hanafi" checked> Hanafi
-            </label>
-            <label class="madhab-btn">
-            <input type="radio" name="madhab_global" value="maliki"> Maliki
-            </label>
-            <label class="madhab-btn">
-            <input type="radio" name="madhab_global" value="shafii"> Shafi'i
-            </label>
-            <label class="madhab-btn">
-            <input type="radio" name="madhab_global" value="hanbali"> Hanbali
-            </label>
-        </div>
-
-        <!-- TABS -->
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('text', this)">📝 Text</button>
-            <button class="tab" onclick="switchTab('barcode', this)">📦 Barcode</button>
-            <button class="tab" onclick="switchTab('image', this)">📷 Image</button>
-        </div>
-
-        <!-- Tab: Text -->
-        <div id="tab-text" class="tab-panel active">
-            <form method="post" action="{% url 'analyze_text' %}">
-                {% csrf_token %}
-                <input type="hidden" name="madhab" id="madhab-text">
-                <div class="field">
-                    <label for="ingredients">Ingredient List</label>
-                    <textarea name="ingredients" id="ingredients"
-                        placeholder="e.g. Water, Sugar, E471, Gelatin, Natural Flavouring..."></textarea>
-                </div>
-                <div class="field">
-                    <label for="product_name">Product Name (Optional)</label>
-                    <input type="text" name="product_name" id="product_name" placeholder="e.g. Oreo Cookies">
-                </div>
-                <button type="submit">Analyze →</button>
-            </form>
-        </div>
-
-        <!-- Tab: Barcode -->
-        <div id="tab-barcode" class="tab-panel">
-            <form method="post" action="{% url 'analyze_barcode' %}">
-                {% csrf_token %}
-                <input type="hidden" name="madhab" id="madhab-barcode">
-                <div class="field">
-                    <label for="barcode">Barcode Number</label>
-                    <input type="text" name="barcode" id="barcode"
-                        placeholder="e.g. 737628064502" inputmode="numeric">
-                </div>
-                <button type="submit">Fetch & Analyze →</button>
-                <p style="font-size:0.75rem;font-weight:700;color:#666;margin-top:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">
-                    Powered by Open Food Facts — 3M+ products
-                </p>
-            </form>
-        </div>
-
-        <!-- Tab: Image -->
-        <div id="tab-image" class="tab-panel">
-            <div style="background:var(--yellow);border:4px solid var(--black);padding:0.875rem 1rem;margin-bottom:1.25rem;box-shadow:4px 4px 0px 0px var(--black);">
-                <p style="font-size:0.8rem;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;color:var(--black);">
-                    ⚠ Before You Upload
-                </p>
-                <p style="font-size:0.8rem;font-weight:700;color:var(--black);margin-top:0.25rem;">
-                    If the product already has a <strong>Halal certification logo</strong> (MUI, JAKIM, IFANCA, HMC etc.) printed on the packaging — trust that certification directly. Use this tool only for products <strong>without</strong> a halal logo.
-                </p>
+<!-- Three Methods -->
+<div class="grid md:grid-cols-3 gap-5" id="analysis-methods">
+    
+    <!-- Text Analysis -->
+    <div class="tayyib-card p-6">
+        <div class="flex items-center gap-x-3 mb-5">
+            <div class="w-10 h-10 bg-[#1C1C1C] rounded-2xl flex items-center justify-center text-xl">📝</div>
+            <div>
+                <div class="font-semibold text-lg">Text Analysis</div>
+                <div class="text-xs text-[#8A8A8A]">Paste ingredient list</div>
             </div>
-            <form method="post" action="{% url 'analyze_image' %}" enctype="multipart/form-data">
-                {% csrf_token %}
-                <input type="hidden" name="madhab" id="madhab-image">
-                <div class="field">
-                    <label for="image">Upload Label Photo</label>
-                    <input type="file" name="image" id="image" accept="image/*">
-                </div>
-                <p style="font-size:0.75rem;font-weight:700;color:#666;margin-bottom:1rem;text-transform:uppercase;letter-spacing:0.05em;">
-                    Clear photo of ingredient list only — JPG/PNG up to 10MB
-                </p>
-                <button type="submit">Analyze Image →</button>
-            </form>
         </div>
+        
+        <form id="text-form" class="space-y-4">
+            <div>
+                <div class="section-header">INGREDIENTS</div>
+                <textarea id="ingredients" rows="4" class="modern-input w-full resize-y min-h-[100px]" 
+                          placeholder="Water, Sugar, E471, Gelatin, Natural Flavouring..."></textarea>
+            </div>
+            
+            <div>
+                <div class="section-header">PRODUCT NAME (OPTIONAL)</div>
+                <input type="text" id="product_name" class="modern-input w-full" placeholder="e.g. Oreo Cookies">
+            </div>
+            
+            <button type="submit" class="tayyib-btn w-full mt-2">Analyze Ingredients</button>
+        </form>
+    </div>
+    
+    <!-- Barcode -->
+    <div class="tayyib-card p-6">
+        <div class="flex items-center gap-x-3 mb-5">
+            <div class="w-10 h-10 bg-[#1C1C1C] rounded-2xl flex items-center justify-center text-xl">📦</div>
+            <div>
+                <div class="font-semibold text-lg">Barcode Scanner</div>
+                <div class="text-xs text-[#8A8A8A]">3M+ products via Open Food Facts</div>
+            </div>
+        </div>
+        
+        <form id="barcode-form" class="space-y-4">
+            <div>
+                <div class="section-header">BARCODE NUMBER</div>
+                <input type="text" id="barcode" class="modern-input w-full font-mono text-lg tracking-widest" 
+                       placeholder="737628064502" inputmode="numeric">
+            </div>
+            
+            <button type="submit" class="tayyib-btn w-full mt-2">Fetch & Analyze</button>
+            <p class="text-center text-[10px] text-[#555] font-medium">Powered by Open Food Facts</p>
+        </form>
+    </div>
+    
+    <!-- Image -->
+    <div class="tayyib-card p-6">
+        <div class="flex items-center gap-x-3 mb-5">
+            <div class="w-10 h-10 bg-[#1C1C1C] rounded-2xl flex items-center justify-center text-xl">📷</div>
+            <div>
+                <div class="font-semibold text-lg">Photo Analysis</div>
+                <div class="text-xs text-[#8A8A8A]">AI reads the label</div>
+            </div>
+        </div>
+        
+        <div class="mb-4 p-3 bg-[#111111] border border-[#2A2A2A] rounded-2xl text-xs">
+            <div class="font-semibold text-[#F5A623] mb-1">⚠️ Important</div>
+            <div class="text-[#8A8A8A]">If the product has a visible Halal logo, trust the certification directly.</div>
+        </div>
+        
+        <form id="image-form" enctype="multipart/form-data" class="space-y-4">
+            <div>
+                <div class="section-header">UPLOAD LABEL PHOTO</div>
+                <label class="block border-2 border-dashed border-[#2A2A2A] hover:border-[#3D7EFF] transition-colors rounded-2xl p-8 text-center cursor-pointer">
+                    <input type="file" id="image" accept="image/*" class="hidden" required>
+                    <div class="text-3xl mb-2">🖼️</div>
+                    <div class="font-semibold">Drop image or click to upload</div>
+                    <div class="text-xs text-[#555] mt-1">JPG or PNG • Max 10MB</div>
+                </label>
+            </div>
+            
+            <button type="submit" class="tayyib-btn w-full mt-2">Analyze Photo</button>
+        </form>
+    </div>
+    
+</div>
 
+<!-- Result Area (hidden by default) -->
+<div id="result-area" class="hidden mt-10">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold">Analysis Result</h2>
+        <button onclick="resetAnalysis()" class="px-5 py-2 text-sm font-semibold text-[#8A8A8A] hover:text-white">New Check</button>
+    </div>
+    
+    <div id="result-content" class="tayyib-card p-8">
+        <!-- Populated by JavaScript -->
     </div>
 </div>
 
-<!-- RECENT CHECKS -->
-{% if recent %}
-<div class="card">
-    <div class="card-header">
-        <span>🕐</span>
-        <h2>Recent Checks</h2>
-    </div>
-    <div class="card-body" style="padding:0;">
-        <table style="width:100%;border-collapse:collapse;font-size:0.875rem;">
-            <thead>
-                <tr style="border-bottom:4px solid var(--black);background:var(--cream);">
-                    <th style="text-align:left;padding:0.75rem 1.25rem;font-size:0.7rem;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;">Product</th>
-                    <th style="text-align:left;padding:0.75rem 1.25rem;font-size:0.7rem;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;">Status</th>
-                    <th style="text-align:left;padding:0.75rem 1.25rem;font-size:0.7rem;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;">Madhab</th>
-                    <th style="text-align:left;padding:0.75rem 1.25rem;font-size:0.7rem;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;">Date</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for r in recent %}
-                <tr style="border-bottom:2px solid var(--black);" onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background='var(--white)'">
-                    <td style="padding:0.75rem 1.25rem;font-weight:700;">
-                        <a href="{% url 'result_detail' r.pk %}" style="color:var(--black);text-decoration:none;border-bottom:3px solid var(--black);">
-                            {{ r.product_name|default:"Manual Check" }}
-                        </a>
-                    </td>
-                    <td style="padding:0.75rem 1.25rem;">
-                        <span class="badge badge-{{ r.overall_status }}">{{ r.overall_status|upper }}</span>
-                    </td>
-                    <td style="padding:0.75rem 1.25rem;font-weight:700;text-transform:uppercase;font-size:0.8rem;">{{ r.madhab }}</td>
-                    <td style="padding:0.75rem 1.25rem;font-weight:700;font-size:0.8rem;color:#555;">{{ r.created_at|date:"M d, H:i" }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-{% endif %}
-
+{% block scripts %}
 <script>
-    function syncMadhab() {
-        const val = document.querySelector('input[name="madhab_global"]:checked')?.value || 'hanafi';
-        document.querySelectorAll('input[name="madhab"]').forEach(el => el.value = val);
-    }
-    document.querySelectorAll('input[name="madhab_global"]').forEach(r => r.addEventListener('change', syncMadhab));
-    syncMadhab();
+let currentMadhab = 'hanafi';
 
-    function switchTab(name, btn) {
-        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById('tab-' + name).classList.add('active');
-        btn.classList.add('active');
+// Render madhab picker
+function renderMadhabPicker() {
+    const container = document.getElementById('madhab-global');
+    const madhabs = ['hanafi', 'maliki', 'shafii', 'hanbali'];
+    const labels = ['Hanafi', 'Maliki', "Shafi'i", 'Hanbali'];
+    
+    container.innerHTML = madhabs.map((m, i) => `
+        <label class="madhab-pill cursor-pointer px-5 py-2 text-sm ${m === currentMadhab ? 'madhab-active' : ''}">
+            <input type="radio" name="madhab_global" value="${m}" class="hidden" ${m === currentMadhab ? 'checked' : ''}>
+            <span>${labels[i]}</span>
+        </label>
+    `).join('');
+    
+    container.querySelectorAll('input').forEach(radio => {
+        radio.addEventListener('change', () => {
+            currentMadhab = radio.value;
+            renderMadhabPicker();
+        });
+    });
+}
+
+// Show full result
+function showFullResult(result) {
+    const methods = document.getElementById('analysis-methods');
+    const resultArea = document.getElementById('result-area');
+    const content = document.getElementById('result-content');
+    
+    methods.style.display = 'none';
+    resultArea.classList.remove('hidden');
+    
+    let html = `
+        <div class="text-center mb-8">
+            <div class="text-7xl mb-4">
+                ${result.overall_status === 'halal' ? '✅' : result.overall_status === 'haram' ? '❌' : '⚠️'}
+            </div>
+            <div class="text-5xl font-bold tracking-tighter mb-2">${result.overall_status.toUpperCase()}</div>
+            <div class="text-2xl text-[#8A8A8A]">${result.product_name || 'Manual Check'}</div>
+            <div class="flex justify-center gap-2 mt-4">
+                <span class="px-4 py-1 text-xs font-bold tracking-widest bg-[#1C1C1C] rounded-full">${result.madhab.toUpperCase()}</span>
+                ${result.ai_used ? '<span class="px-4 py-1 text-xs font-bold tracking-widest bg-[#3D7EFF] text-white rounded-full">AI</span>' : ''}
+            </div>
+        </div>
+    `;
+    
+    if (result.ingredient_results && result.ingredient_results.length > 0) {
+        html += `
+            <div class="mb-6">
+                <div class="font-semibold text-xl mb-4 flex items-center gap-x-2">🔬 Ingredient Breakdown</div>
+                <div class="divide-y divide-[#2A2A2A] border border-[#2A2A2A] rounded-2xl overflow-hidden">
+        `;
+        
+        result.ingredient_results.forEach(ing => {
+            html += `
+                <div class="px-6 py-5 flex gap-4 items-start bg-[#111111]">
+                    <div class="text-2xl w-8 flex-shrink-0">
+                        ${ing.status === 'halal' ? '✅' : ing.status === 'haram' ? '❌' : '⚠️'}
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-x-2">
+                            <span class="font-semibold text-lg">${ing.original}</span>
+                            ${ing.matched_name && ing.matched_name !== ing.original ? `<span class="text-sm text-[#8A8A8A]">(${ing.matched_name})</span>` : ''}
+                            ${ing.ai_classified ? '<span class="px-2 py-px text-[10px] font-black bg-[#3D7EFF] text-white rounded">AI</span>' : ''}
+                        </div>
+                        ${ing.source ? `<div class="text-sm text-[#8A8A8A] mt-1.5">${ing.source}</div>` : ''}
+                        ${ing.notes ? `<div class="text-xs text-[#555] mt-1">📌 ${ing.notes}</div>` : ''}
+                    </div>
+                    <div>
+                        <span class="px-4 py-1 text-xs font-bold rounded-full status-${ing.status}">
+                            ${ing.status.toUpperCase()}
+                        </span>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += `</div></div>`;
     }
+    
+    if (result.unknown_ingredients && result.unknown_ingredients.length > 0) {
+        html += `
+            <div class="mb-6">
+                <div class="font-semibold text-xl mb-4">❓ Unrecognized Ingredients</div>
+                <div class="flex flex-wrap gap-2">
+                    ${result.unknown_ingredients.map(unk => `<span class="px-4 py-2 bg-[#111111] rounded-2xl text-sm border border-[#2A2A2A]">${unk}</span>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    content.innerHTML = html;
+}
+
+// Reset analysis
+function resetAnalysis() {
+    document.getElementById('analysis-methods').style.display = 'grid';
+    document.getElementById('result-area').classList.add('hidden');
+    document.getElementById('result-content').innerHTML = '';
+}
+
+// Handle analysis
+async function handleAnalysis(type) {
+    const token = window.TayyibAuth.getAccessToken();
+    if (!token) {
+        alert('Please log in to use analysis features');
+        window.location.href = '/login/';
+        return;
+    }
+    
+    try {
+        let endpoint = '';
+        let options = { method: 'POST' };
+        
+        if (type === 'text') {
+            endpoint = '/api/analyze/text/';
+            options.body = JSON.stringify({
+                ingredients: document.getElementById('ingredients').value,
+                madhab: currentMadhab,
+                product_name: document.getElementById('product_name').value
+            });
+            options.headers = { 'Content-Type': 'application/json' };
+        } 
+        else if (type === 'barcode') {
+            endpoint = '/api/analyze/barcode/';
+            options.body = JSON.stringify({
+                barcode: document.getElementById('barcode').value,
+                madhab: currentMadhab
+            });
+            options.headers = { 'Content-Type': 'application/json' };
+        } 
+        else if (type === 'image') {
+            endpoint = '/api/analyze/image/';
+            const form = new FormData();
+            form.append('image', document.getElementById('image').files[0]);
+            form.append('madhab', currentMadhab);
+            options.body = form;
+            delete options.headers;
+        }
+        
+        const response = await window.TayyibAuth.apiFetch(endpoint, options);
+        const result = await response.json();
+        
+        if (response.ok) {
+            showFullResult(result);
+        } else {
+            alert('Analysis failed: ' + (result.error || 'Unknown error'));
+        }
+        
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+// Attach form handlers
+document.getElementById('text-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    handleAnalysis('text');
+});
+
+document.getElementById('barcode-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    handleAnalysis('barcode');
+});
+
+document.getElementById('image-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    handleAnalysis('image');
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderMadhabPicker();
+});
 </script>
+{% endblock %}
 {% endblock %}

@@ -1,4 +1,5 @@
 from django.urls import path
+from django.views.generic.base import TemplateView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from . import api_views, auth_views, community_views, views
@@ -10,6 +11,21 @@ urlpatterns = [
     path("analyze/barcode/", views.analyze_barcode, name="analyze_barcode"),
     path("analyze/image/", views.analyze_image, name="analyze_image"),
     path("result/<int:pk>/", views.result_detail, name="result_detail"),
+    path(
+        "login/",
+        TemplateView.as_view(template_name="registration/login.html"),
+        name="login",
+    ),
+    path(
+        "register/",
+        TemplateView.as_view(template_name="registration/register.html"),
+        name="register",
+    ),
+    path(
+        "profile/",
+        TemplateView.as_view(template_name="core/profile.html"),
+        name="profile",
+    ),
     # API routes
     path("api/analyze/text/", api_views.api_analyze_text, name="api_analyze_text"),
     path(
